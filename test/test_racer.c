@@ -74,8 +74,8 @@ static void test_texts(void) {
     assert(racer_input_json(b, sizeof(b), 0.5f, -2, true));
     assert(!strcmp(b, "{\"t\":\"in\",\"s\":0.500,\"p\":-1.000,\"hb\":1}"));
     assert(racer_input_json(b, 10, 0, 0, false) == 0);
-    assert(racer_page_url(b, sizeof(b), "192.168.4.1", "abc123"));
-    assert(!strcmp(b, "http://192.168.4.1/#abc123"));
+    assert(racer_page_url(b, sizeof(b), "203.0.113.7", "abc123"));
+    assert(!strcmp(b, "http://203.0.113.7/#abc123"));
     assert(racer_wifi_qr(b, sizeof(b), "Tikpal Racer", "ke;y:w\\"));
     assert(!strcmp(b, "WIFI:T:WPA;S:Tikpal Racer;P:ke\\;y\\:w\\\\;;"));
     assert(racer_wifi_qr(b, 12, "Tikpal Racer", "abcdefgh") == 0 && b[0] == 0);

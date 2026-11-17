@@ -52,7 +52,7 @@ static state_t s_state = ST_NET;
 static bool s_en;
 static volatile bool s_net_up, s_hotspot, s_hotspot_busy, s_hello, s_closed, s_ap_client;
 static volatile bool s_want_hotspot, s_want_start, s_want_neutral, s_key_hold, s_touch_hold, s_motion_ok;
-static char s_ip[16] = "192.168.4.1", s_token[YK_LAN_TOKEN_LEN + 1], s_ssid[24], s_key[12];
+static char s_ip[16], s_token[YK_LAN_TOKEN_LEN + 1], s_ssid[24], s_key[12];
 static racer_tilt_t s_tilt;
 static int64_t s_last_us;
 static volatile racer_tele_t s_tele;
@@ -152,12 +152,27 @@ static void load_hotspot(void) {
     }
 }
 
+static bool read_network_ip(const char *interface_key) {
+    esp_netif_t *interface = esp_netif_get_handle_from_ifkey(interface_key);
+    esp_netif_ip_info_t ip;
+    if (!interface || esp_netif_get_ip_info(interface, &ip) != ESP_OK || !ip.ip.addr) return false;
+    snprintf(s_ip, sizeof(s_ip), IPSTR, IP2STR(&ip.ip));
+    return true;
+}
+
 static void start_hotspot(void) {
     load_hotspot();
     yk_wifi_ap_on_client(on_ap_client, NULL);
     const esp_err_t err = yk_wifi_ap_start(&(yk_wifi_ap_config_t){.ssid = s_ssid, .password = s_key, .max_clients = 1});
-    if (err != ESP_OK) ESP_LOGE(TAG, "hotspot: %s", esp_err_to_name(err));
-    snprintf(s_ip, sizeof(s_ip), "%s", YK_WIFI_AP_IP);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "hotspot: %s", esp_err_to_name(err));
+        return;
+    }
+    if (!read_network_ip("WIFI_AP_DEF")) {
+        ESP_LOGE(TAG, "hotspot address unavailable");
+        yk_wifi_ap_stop();
+        return;
+    }
     s_ap_client = yk_wifi_ap_clients() > 0;
     s_hotspot = true;
 }
@@ -173,11 +188,7 @@ static void net_task(void *arg) {
     (void)arg;
     bool home = false;
     if (yk_wifi_start() == ESP_OK && yk_wifi_state() != YK_WIFI_UNCONFIGURED) home = yk_wifi_wait_connected(8000);
-    esp_netif_ip_info_t ip;
-    esp_netif_t *sta = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
-    if (home && sta && esp_netif_get_ip_info(sta, &ip) == ESP_OK && ip.ip.addr) {
-        snprintf(s_ip, sizeof(s_ip), IPSTR, IP2STR(&ip.ip));
-    } else {
+    if (!home || !read_network_ip("WIFI_STA_DEF")) {
         start_hotspot();
     }
     esp_err_t err = start_web();
@@ -281,6 +292,15 @@ static void set_qr(const char *text) {
 /** The pairing page as it should be now: the hotspot's QR until the iPad joined it, then the page's. */
 static void draw_pair(void) {
     char text[96], line[48];
+    lv_obj_set_hidden(s_qr, !s_ip[0]);
+    if (!s_ip[0]) {
+        lv_label_set_text(s_pair_title, T("还没连上网络", "No network yet"));
+        lv_label_set_text(s_pair_line, s_hotspot_busy ? T("正在开热点…", "Opening hotspot…")
+                                                      : T("点屏幕重试", "Tap to retry"));
+        lv_label_set_text(s_pair_d1, "");
+        lv_label_set_text(s_pair_d2, "");
+        return;
+    }
     if (s_hotspot && !s_ap_client) {
         racer_wifi_qr(text, sizeof(text), s_ssid, s_key);
         set_qr(text);
