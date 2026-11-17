@@ -1,0 +1,56 @@
+{
+  "slug": "dial-racer",
+  "kind": "extension",
+  "version": "0.1.1",
+  "name": {
+    "zh": "掌上赛道",
+    "en": "Tilt Rally"
+  },
+  "boards": [
+    "tikpal-r1"
+  ],
+  "layout": "yaykit-v1",
+  "minYay": "0.1.14",
+  "apiLevel": 4,
+  "capabilities": {},
+  "launch": {
+    "summary": {
+      "zh": "掌上赛道：倾斜 Tikpal Voice，在 iPad 的桌面赛道上转向、加速和刹车。",
+      "en": "Tilt Rally: tilt Tikpal Voice to steer, accelerate, and brake on a tabletop track on your iPad."
+    },
+    "examples": {
+      "zh": [
+        "打开掌上赛道",
+        "我想玩赛车",
+        "用圆屏当方向盘"
+      ],
+      "en": [
+        "Open Tilt Rally",
+        "I want to race",
+        "Use the screen as a steering wheel"
+      ]
+    }
+  },
+  "aliases": {
+    "zh": [
+      "表盘赛车",
+      "赛车",
+      "方向盘"
+    ],
+    "en": [
+      "Dial Racer",
+      "Racer",
+      "Steering wheel"
+    ]
+  },
+  "scenes": [
+    "party"
+  ],
+  "audience": "all",
+  "pricing": {
+    "kind": "free"
+  },
+  "voiceCode": {
+    "number": 268
+  }
+}
